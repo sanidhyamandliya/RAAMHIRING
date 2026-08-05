@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+
+# Env (never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+
+# Temp extract
+tmp_extract/

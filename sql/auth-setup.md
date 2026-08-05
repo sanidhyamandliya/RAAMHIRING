@@ -1,0 +1,26 @@
+-- ============================================================
+-- Apex HR Dashboard — Auth setup notes (manual in Supabase UI)
+-- ============================================================
+-- Dashboard login uses Supabase Auth (email + password).
+-- There is no SQL to "create passwords" here — use the Dashboard:
+--
+-- 1) Authentication → Providers → enable Email
+-- 2) Authentication → Users → Add user
+--      email:    admin@yourcompany.com
+--      password: (choose a strong password)
+--      Auto Confirm User: ON
+-- 3) After create, open the user → App Metadata (JSON) set:
+--      { "role": "admin" }
+--    For HR-only users use:
+--      { "role": "hr" }
+-- 4) Optional user_metadata for display name:
+--      { "name": "System Admin" }
+--
+-- Roles:
+--   admin → full nav (violations, whitelist, questions, colleges, settings)
+--   hr    → hides .admin-only items
+--
+-- Candidates do NOT sign in; they use the anon key on the assessment page.
+--
+-- Data lives in relational tables (see relational-schema.sql), not Auth.
+-- Run sql/relational-schema.sql before using the apps.
