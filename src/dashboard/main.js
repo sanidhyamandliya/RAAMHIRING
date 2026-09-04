@@ -772,7 +772,7 @@ function biHandleFile(file){
       const emailRegex=/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
       const found=[...new Set(allText.match(emailRegex)||[])];
       // Filter out obvious non-person emails
-      const filtered=found.filter(e=>!e.includes('example.com')&&!e.includes('test@')&&!e.includes('@noreply'));
+      const filtered=found.filter(e=>!/@example\.com$/i.test(e)&&!/^test@/i.test(e)&&!/@noreply/i.test(e));
       _inviteEmails=[...filtered];
       biShowStep2();
     } catch(err){
