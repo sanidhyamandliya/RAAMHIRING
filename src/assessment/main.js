@@ -338,7 +338,13 @@ function _startGateCountdown(target){
 function collegeEnter(){
   collegeProceeded=true;
   applyCollegeInterface();
-  show('s-land');
+  if(COLLEGE_CFG&&COLLEGE_CFG.progKey){
+    // College link has a programme configured — skip the manual picker entirely.
+    S.prog=COLLEGE_CFG.prog;S.progKey=COLLEGE_CFG.progKey;
+    goReg();
+  }else{
+    show('s-land');
+  }
 }
 function applyCollegeInterface(){
   if(!COLLEGE_CFG) return;
@@ -735,6 +741,12 @@ function manualCapture(){const url=capturePhoto('manual');if(url)showToast('📸
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 function selProg(el,name,key){document.querySelectorAll('.prog-card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');S.prog=name;S.progKey=key;document.getElementById('btn-start').disabled=false;}
 function goReg(){if(!S.prog)return;document.getElementById('r-prog').value=S.prog;S.candSeq=parseInt(localStorage.getItem('apex_cand_seq')||'0')+1;localStorage.setItem('apex_cand_seq',S.candSeq);populateRegDropdowns();show('s-reg');}
+function regBack(){
+  // College links with a programme configured skip s-land entirely, so send those candidates
+  // back to the college gate on "Back" instead of a picker screen they never saw.
+  if(COLLEGE_ID&&COLLEGE_CFG&&COLLEGE_CFG.progKey){show('s-college');}
+  else{show('s-land');}
+}
 
 function submitReg(){
   const fn=document.getElementById('r-fn').value.trim();
@@ -1134,6 +1146,7 @@ window.manualCapture = manualCapture;
 window.show = show;
 window.selProg = selProg;
 window.goReg = goReg;
+window.regBack = regBack;
 window.submitReg = submitReg;
 window.populateRegDropdowns = populateRegDropdowns;
 window.onCollegeChange = onCollegeChange;

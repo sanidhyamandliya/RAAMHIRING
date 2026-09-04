@@ -17,6 +17,8 @@ create table if not exists public.colleges (
   welcome       text default '',
   land_title    text,
   land_eyebrow  text,
+  prog          text default '',
+  prog_key      text default '',
   created_at    timestamptz not null default now(),
   created_by    text default ''
 );

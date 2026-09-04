@@ -1044,6 +1044,12 @@ function _collegeStatus(cfg){
   return{label:'Not started',color:'var(--orange)'};
 }
 function _fmtDT(ms){if(!ms)return '—';try{return new Date(ms).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}catch(e){return '—';}}
+const PROG_NAMES={'6mt':'6-Month Management Trainee Programme','3mt':'3-Month Management Trainee Programme'};
+function progOptionsHtml(selected){
+  return `<option value="" ${!selected?'selected':''}>Let candidate choose</option>
+    <option value="6mt" ${selected==='6mt'?'selected':''}>6-Month Programme</option>
+    <option value="3mt" ${selected==='3mt'?'selected':''}>3-Month Programme</option>`;
+}
 function collegeSlug(name){return (name||'college').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,28)+'-'+Math.random().toString(36).slice(2,6);}
 function collegeLink(id){return ASSESSMENT_URL+'?college='+encodeURIComponent(id);}
 
@@ -1063,11 +1069,14 @@ function createCollege(){
   const expireV=document.getElementById('cl-expire')?.value;
   const accent=document.getElementById('cl-accent')?.value||'';
   const welcome=(document.getElementById('cl-welcome')?.value||'').trim();
+  const progKey=document.getElementById('cl-prog')?.value||'';
   const id=collegeSlug(name);
   const cfg={name,open:false,ended:false,
     startTime:startV?new Date(startV).getTime():0,
     expireTime:expireV?new Date(expireV).getTime():0,
-    accent:accent||'',welcome:welcome||'',createdAt:Date.now(),createdBy:loggedUser?.name||'HR'};
+    accent:accent||'',welcome:welcome||'',
+    prog:progKey?PROG_NAMES[progKey]:'',progKey,
+    createdAt:Date.now(),createdBy:loggedUser?.name||'HR'};
   _collegeWrite(id,cfg);
   showToast('🎓 College link created','success');
 }
@@ -1087,7 +1096,8 @@ function collegeSaveInterface(id){
 function collegeSetSchedule(id){
   const startV=document.getElementById('cs-start-'+id)?.value;
   const expireV=document.getElementById('cs-expire-'+id)?.value;
-  _collegeWrite(id,{startTime:startV?new Date(startV).getTime():0,expireTime:expireV?new Date(expireV).getTime():0});
+  const progKey=document.getElementById('cs-prog-'+id)?.value||'';
+  _collegeWrite(id,{startTime:startV?new Date(startV).getTime():0,expireTime:expireV?new Date(expireV).getTime():0,prog:progKey?PROG_NAMES[progKey]:'',progKey});
   showToast('🗓 Schedule updated','success');
 }
 function _dtLocalValue(ms){if(!ms)return '';try{const d=new Date(ms);const pad=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());}catch(e){return '';}}
@@ -1231,7 +1241,7 @@ function renderColleges(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:.7rem">
         <div>
           <div style="font-family:var(--fd);font-size:14px;font-weight:700">${cfg.name||id}</div>
-          <div style="font-size:9.5px;color:var(--muted);margin-top:2px">${count} registered · created ${_fmtDT(cfg.createdAt)}</div>
+          <div style="font-size:9.5px;color:var(--muted);margin-top:2px">${count} registered · created ${_fmtDT(cfg.createdAt)} · Programme: <strong style="color:${cfg.progKey?'var(--amber)':'var(--muted)'}">${cfg.progKey==='6mt'?'6-Month':cfg.progKey==='3mt'?'3-Month':'Not set (candidate chooses)'}</strong></div>
         </div>
         <span class="pill" style="background:${st.color}1a;color:${st.color};border:1px solid ${st.color}55;font-size:10px;padding:3px 9px">${st.label}</span>
       </div>
@@ -1248,11 +1258,12 @@ function renderColleges(){
         <button class="btn btn-danger" style="font-size:9.5px;opacity:.8" onclick="collegeDelete('${id}')">🗑 Delete</button>
       </div>
       <details style="margin-bottom:.5rem">
-        <summary style="cursor:pointer;font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em">🗓 Schedule (start &amp; expiry)</summary>
+        <summary style="cursor:pointer;font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em">🗓 Schedule &amp; Programme</summary>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:.6rem">
           <div><label style="font-size:8.5px;color:var(--text2);display:block;margin-bottom:2px">Scheduled start</label><input type="datetime-local" class="inp" id="cs-start-${id}" value="${_dtLocalValue(_collegeMs(cfg.startTime))}" style="width:100%;font-size:10.5px"></div>
           <div><label style="font-size:8.5px;color:var(--text2);display:block;margin-bottom:2px">Link expiry</label><input type="datetime-local" class="inp" id="cs-expire-${id}" value="${_dtLocalValue(_collegeMs(cfg.expireTime))}" style="width:100%;font-size:10.5px"></div>
         </div>
+        <div style="margin-top:8px"><label style="font-size:8.5px;color:var(--text2);display:block;margin-bottom:2px">Programme</label><select class="inp" id="cs-prog-${id}" style="width:100%;font-size:10.5px">${progOptionsHtml(cfg.progKey)}</select><div style="font-size:8.5px;color:var(--muted);margin-top:3px">"Let candidate choose" shows the old 3-Month/6-Month picker; picking one here locks it and skips the picker for candidates using this link.</div></div>
         <div style="font-size:9px;color:var(--muted);margin-top:5px">Start: <strong>${_fmtDT(_collegeMs(cfg.startTime))}</strong> · Expires: <strong>${_fmtDT(_collegeMs(cfg.expireTime))}</strong></div>
         <button class="btn btn-amber" style="font-size:9px;margin-top:.5rem" onclick="collegeSetSchedule('${id}')">💾 Save Schedule</button>
       </details>
@@ -1275,6 +1286,7 @@ function renderColleges(){
       <div><label style="font-size:8.5px;color:var(--text2);display:block;margin-bottom:2px">Scheduled start (optional)</label><input type="datetime-local" class="inp" id="cl-start" style="width:100%;font-size:10.5px"></div>
       <div><label style="font-size:8.5px;color:var(--text2);display:block;margin-bottom:2px">Link expiry (optional)</label><input type="datetime-local" class="inp" id="cl-expire" style="width:100%;font-size:10.5px"></div>
       <div style="display:flex;align-items:flex-end;gap:8px"><div><label style="font-size:8.5px;color:var(--text2);display:block;margin-bottom:2px">Accent</label><input type="color" id="cl-accent" value="#d4a843" style="width:46px;height:30px;border:none;background:none;cursor:pointer"></div><div style="flex:1"><label style="font-size:8.5px;color:var(--text2);display:block;margin-bottom:2px">Welcome message (optional)</label><input class="inp" id="cl-welcome" placeholder="Shown on the gate screen" style="width:100%;font-size:10.5px"></div></div>
+      <div><label style="font-size:8.5px;color:var(--text2);display:block;margin-bottom:2px">Programme</label><select class="inp" id="cl-prog" style="width:100%;font-size:10.5px">${progOptionsHtml('')}</select></div>
     </div>
     <button class="btn btn-amber" style="font-size:10px" onclick="createCollege()">+ Create College Link</button>
   </div>

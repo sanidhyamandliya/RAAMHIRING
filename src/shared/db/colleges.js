@@ -13,6 +13,8 @@ export function toUiCollege(row) {
     welcome: row.welcome || '',
     landTitle: row.land_title || '',
     landEyebrow: row.land_eyebrow || '',
+    prog: row.prog || '',
+    progKey: row.prog_key || '',
     createdAt: row.created_at ? Date.parse(row.created_at) : Date.now(),
     createdBy: row.created_by || '',
   };
@@ -31,6 +33,8 @@ export function fromUiCollege(ui, id) {
     welcome: ui.welcome || '',
     land_title: ui.landTitle || null,
     land_eyebrow: ui.landEyebrow || null,
+    prog: ui.prog || '',
+    prog_key: ui.progKey || '',
     created_by: ui.createdBy || '',
   };
 }
@@ -70,6 +74,8 @@ export async function patchCollege(id, patch) {
   if (patch.welcome !== undefined) row.welcome = patch.welcome;
   if (patch.landTitle !== undefined) row.land_title = patch.landTitle;
   if (patch.landEyebrow !== undefined) row.land_eyebrow = patch.landEyebrow;
+  if (patch.prog !== undefined) row.prog = patch.prog;
+  if (patch.progKey !== undefined) row.prog_key = patch.progKey;
   const { data, error } = await supabase.from('colleges').update(row).eq('id', id).select('*').single();
   if (error) throw error;
   return toUiCollege(data);
