@@ -1,40 +1,25 @@
 import { supabase, toUiCandidate, fromUiCandidate } from './mappers.js';
 
-// Supabase/PostgREST caps a single response at 1000 rows by default. With enough
-// candidates each having up to 6 score rows, candidate_scores can exceed that —
-// fetch in pages so no candidate's scores get silently dropped off the end.
-const PAGE_SIZE = 1000;
-async function fetchAllRows(builder) {
-  const rows = [];
-  let offset = 0;
-  for (;;) {
-    const { data, error } = await builder().range(offset, offset + PAGE_SIZE - 1);
-    if (error) throw error;
-    rows.push(...(data || []));
-    if (!data || data.length < PAGE_SIZE) break;
-    offset += PAGE_SIZE;
-  }
-  return rows;
-}
-
 async function fetchScoresMap(candidateIds) {
   if (!candidateIds.length) return {};
-  const data = await fetchAllRows(() =>
-    supabase.from('candidate_scores').select('candidate_id, round_index, score').in('candidate_id', candidateIds)
-  );
+  const { data, error } = await supabase
+    .from('candidate_scores')
+    .select('candidate_id, round_index, score')
+    .in('candidate_id', candidateIds);
+  if (error) throw error;
   const map = {};
-  data.forEach((r) => {
+  (data || []).forEach((r) => {
     (map[r.candidate_id] ||= []).push(r);
   });
   return map;
 }
 
 export async function getCandidates({ includeDeleted = false } = {}) {
-  const rows = await fetchAllRows(() => {
-    let q = supabase.from('candidates').select('*').order('updated_at', { ascending: false });
-    if (!includeDeleted) q = q.is('deleted_at', null);
-    return q;
-  });
+  let q = supabase.from('candidates').select('*').order('updated_at', { ascending: false });
+  if (!includeDeleted) q = q.is('deleted_at', null);
+  const { data, error } = await q;
+  if (error) throw error;
+  const rows = data || [];
   const scoresMap = await fetchScoresMap(rows.map((r) => r.id));
   return rows.map((r) => toUiCandidate(r, scoresMap[r.id] || []));
 }
