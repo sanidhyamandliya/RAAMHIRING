@@ -179,12 +179,8 @@ function mergeEventToCandidate(e){
   const idx=all.findIndex(x=>x.email===email);
   const rec=idx>=0?{...all[idx]}:{email,id:'C'+Date.now().toString(36).toUpperCase(),_created:Date.now(),status:'in_progress',completedRounds:0,scores:[]};
   ['fname','lname','college','passYear','deg','phone','prog','progKey','collegeId','registeredAt','submittedAt','certId','deviceId'].forEach(f=>{if(e[f]!=null&&e[f]!=='')rec[f]=e[f];});
-  // A 'registered' event always carries a fresh scores:[] / completedRounds:0 snapshot.
-  // If a candidate reloads/resubmits registration after already progressing (no server-side
-  // duplicate check exists), that stray event must never regress data we already have —
-  // only accept updates that are at least as complete as what's on record.
-  if(Array.isArray(e.scores)&&e.scores.length>=(rec.scores||[]).length)rec.scores=e.scores;
-  if(e.completedRounds!=null&&e.completedRounds>=(rec.completedRounds||0))rec.completedRounds=e.completedRounds;
+  if(Array.isArray(e.scores))rec.scores=e.scores;
+  if(e.completedRounds!=null)rec.completedRounds=e.completedRounds;
   if(e.finalScore!=null)rec.finalScore=e.finalScore;
   if(e.violations!=null)rec.violations=e.violations;
   if(!rec.fname&&e.candidateName){const p=String(e.candidateName).trim().split(' ');rec.fname=p[0]||'';rec.lname=p.slice(1).join(' ');}
